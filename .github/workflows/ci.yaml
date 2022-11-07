@@ -27,11 +27,11 @@ jobs:
       run: |
         set -ex
         df -h
-        for i in $(seq 5); do bazel fetch --loading_phase_threads=1 //${{ matrix.target }}/... && break || sleep 20; done
+        for i in $(seq 5); do bazel fetch --loading_phase_threads=1 //... && break || sleep 20; done
         df -h
-        bazel build --curses=no //${{ matrix.target }}/...
+        bazel build --curses=no //...
         df -h
-        bazel test --curses=no --test_output=errors //${{ matrix.target }}/...
+        bazel test --curses=no --test_output=errors //...
         # Ignore experimental targets, which might not pass.
         # TODO: Fix or remove these exceptions.
         df -h
