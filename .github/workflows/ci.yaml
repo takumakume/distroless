@@ -9,7 +9,15 @@ on:
 
 jobs:
   ci:
-    name: CI
+    strategy:
+      matrix:
+        target:
+        - base
+        - examples
+        - experimental
+        - java
+        - nodejs
+    name: CI for ${{ matrix.target }}
     runs-on: ubuntu-latest
 
     steps:
@@ -19,15 +27,15 @@ jobs:
       run: |
         set -ex
         df -h
-        for i in $(seq 5); do bazel fetch --loading_phase_threads=1 //... && break || sleep 20; done
+        for i in $(seq 5); do bazel fetch --loading_phase_threads=1 //${{ matrix.target }}/... && break || sleep 20; done
         df -h
-        bazel build --curses=no //...
+        bazel build --curses=no //${{ matrix.target }}/...
         df -h
-        bazel test --curses=no --test_output=errors //...
+        bazel test --curses=no --test_output=errors //${{ matrix.target }}/...
         # Ignore experimental targets, which might not pass.
         # TODO: Fix or remove these exceptions.
         df -h
-        targets=$(bazel query 'attr("tags", "'amd64'", "//...")')
+        targets=$(bazel query 'attr("tags", "'amd64'", "//${{ matrix.target }}/...")')
         echo ${targets}
         bazel build --curses=no ${targets}
         df -h
