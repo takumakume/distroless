@@ -8,15 +8,21 @@ on:
     branches: [ 'main' ]
 
 jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      something: ${{ steps.set-matrix.outputs.value }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bazelbuild/setup-bazelisk@v2
+      - run: apt update && apt install -y jq
+      - run: echo MATRIX=$(bazel query 'attr("tags", "'amd64'", "//...")' | tr ':' '/' | awk -F '/' '{print $3}' | uniq | jq -Rc . | jq -cs .) >> $GITHUB_ENV
+
   ci:
+    needs: set-matrix
     strategy:
       matrix:
-        target:
-        - base
-        - examples
-        - experimental
-        - java
-        - nodejs
+        target: ${{ fromJson(env.MATRIX) }}
     name: CI for ${{ matrix.target }}
     runs-on: ubuntu-latest
 
