@@ -11,18 +11,19 @@ jobs:
   set-matrix:
     runs-on: ubuntu-latest
     outputs:
-      something: ${{ steps.set-matrix.outputs.value }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
       - uses: bazelbuild/setup-bazelisk@v2
       - run: apt update && apt install -y jq
-      - run: echo MATRIX=$(bazel query 'attr("tags", "'amd64'", "//...")' | tr ':' '/' | awk -F '/' '{print $3}' | uniq | jq -Rc . | jq -cs .) >> $GITHUB_ENV
+      - id: set-matrix
+        run: echo matrix=$(bazel query 'attr("tags", "'amd64'", "//...")' | tr ':' '/' | awk -F '/' '{print $3}' | uniq | jq -Rc . | jq -cs .) >> $GITHUB_OUTPUT
 
   ci:
     needs: set-matrix
     strategy:
       matrix:
-        target: ${{ fromJson(env.MATRIX) }}
+        target: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     name: CI for ${{ matrix.target }}
     runs-on: ubuntu-latest
 
